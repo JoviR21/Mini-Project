@@ -1,23 +1,53 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
-import { catchHandle } from "../middlewares/catch-handle-middleware";
 
 const prisma = new PrismaClient();
 
 // GET METHOD--
 // Get all Movie
-export async function getAllMovie(req: Request, res: Response) {
+export async function getAllMovie(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const movies = await prisma.movie.findMany();
 
-    res.status(200).json({ data: movies });
+    return res.status(200).json({ data: movies });
   } catch (error) {
-    catchHandle(error, res);
+    next(error);
+  }
+}
+
+// Search Movie by ID
+export async function searchSingleMovie(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const { id } = req.params;
+
+  try {
+    const movie = await prisma.movie.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    if (!movie) return res.status(404).json({ message: "Movie not found" });
+
+    return res.status(200).json({ data: movie });
+  } catch (error) {
+    next(error);
   }
 }
 
 // Search Movie by Query
-export async function searchMovie(req: Request, res: Response) {
+export async function searchMovie(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const { text } = req.query;
 
@@ -38,15 +68,19 @@ export async function searchMovie(req: Request, res: Response) {
       },
     });
 
-    res.status(200).json({ data: movies });
+    return res.status(200).json({ data: movies });
   } catch (error) {
-    catchHandle(error, res);
+    next(error);
   }
 }
 
 // POST METHOD --
 // Create new Movie
-export async function createMovie(req: Request, res: Response) {
+export async function createMovie(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const { title, director, genre, rated, duration, releaseYear } = req.body;
 
@@ -61,8 +95,8 @@ export async function createMovie(req: Request, res: Response) {
       },
     });
 
-    res.status(200).json({ message: "Movie successfully created" });
+    return res.status(200).json({ message: "Movie successfully created" });
   } catch (error) {
-    catchHandle(error, res);
+    next(error);
   }
 }

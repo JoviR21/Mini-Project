@@ -1,15 +1,23 @@
-import { Response } from "express";
+import { Request, Response, NextFunction } from "express";
 
-export function catchHandle(error: unknown, res: Response) {
-  let statusCode = 500;
-  let message;
+interface ErrorWithStatusCode extends Error {
+  statusCode?: number;
+}
 
-  if (error instanceof Error) {
-    statusCode = (error as any).statusCode || 500;
-    message =
-      `Encountered error because: ${error.message}` ||
-      "Unknown error happened. Sorry, and good luck!";
+export function error(
+  error: ErrorWithStatusCode,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const defaultError = {
+    statusCode: error.statusCode || 500,
+    message: error.message || "General error. Sorry, and good luck",
+  };
 
-    res.status(statusCode).json({ message });
-  }
+  console.error(error);
+
+  return res
+    .status(defaultError.statusCode)
+    .json({ message: defaultError.message });
 }
